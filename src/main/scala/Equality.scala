@@ -20,8 +20,7 @@ object Equality {
     val optionCat1 = Option(cat1)
     val optionCatNone = Option.empty[Cat]
     println(s"${cat1.show} === ${cat1.show}: ${cat1 === cat1}")
-    println(s"${cat1.show} === ${cat2.show}: ${cat1 === cat2}")
-    
+    println(s"${cat1.show} === ${cat2.show}: ${cat1 === cat2}") 
     println(s"${optionCat1.show} === ${optionCatNone.show}: ${optionCat1 === optionCatNone}")
   }
 }
