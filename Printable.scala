@@ -19,8 +19,6 @@ object PrintableInstances {
   }
 }
 
-import PrintableInstances._
-
 object Printable {
   def format[A](value: A)(implicit p: Printable[A]): String  = {
     p.format(value) 
@@ -46,16 +44,26 @@ object PrintableSyntax {
 
 object Run {
   val matroskin = Cat("Matroskin", 4, "grey with stripes")
-   
-  def interfaceObjectsApproach = {
+
+  def usingInterfaceObjectsApproach = {
     import PrintableInstances._
     Printable.print(matroskin)
   }
 
-  def interfaceSyntaxApproach = {
+  def usingInterfaceSyntaxApproach = {
     import PrintableInstances._
     import PrintableSyntax._
     matroskin.print
+  }
+
+  def usingCats = {
+    import cats.Show
+    import cats.implicits._
+    implicit val catShow: Show[Cat] = new Show[Cat] {
+      def show(cat: Cat): String = 
+        s"${cat.name} is a ${cat.age} year-old ${cat.color} cat."
+    }
+    matroskin.show
   }
 }
 
