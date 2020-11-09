@@ -45,17 +45,18 @@ object PrintableSyntax {
 }
 
 object Run {
-  // Interface Approach 1: Interface Objects
-  //import PrintableInstances._
-  //val matroskin = Cat("Matroskin", 4, "grey with stripes")
-  //Printable.print(matroskin)
-  
-
-  // Interface Approach 2: Interface Syntax
-  import PrintableInstances._
-  import PrintableSyntax._
   val matroskin = Cat("Matroskin", 4, "grey with stripes")
-  matroskin.print
+   
+  def interfaceObjectsApproach = {
+    import PrintableInstances._
+    Printable.print(matroskin)
+  }
+
+  def interfaceSyntaxApproach = {
+    import PrintableInstances._
+    import PrintableSyntax._
+    matroskin.print
+  }
 }
 
 
