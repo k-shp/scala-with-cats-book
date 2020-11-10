@@ -42,7 +42,7 @@ object PrintableSyntax {
   }
 }
 
-object Run {
+object RunPrintable {
   val matroskin = Cat("Matroskin", 4, "grey with stripes")
 
   def usingInterfaceObjectsApproach = {
