@@ -23,7 +23,7 @@ object SuperAdder {
   }
 
 
-  def addCats[A: Monoid](items: List[A]): A = {
+  def addWithCatsSyntax[A: Monoid](items: List[A]): A = {
     items.reduce(_ |+| _)
   }
 
@@ -32,6 +32,6 @@ object SuperAdder {
     val b = Order(3.0, 5.0)
 
     println(add(List(a, b)))
-    println(addCats(List(a, b)))
+    println(addWithCatsSyntax(List(a, b)))
   }
 }
