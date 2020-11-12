@@ -18,6 +18,7 @@ object Functors {
 }
 
 object RunFunctors {
+  import Functors.treeFunctor
   def run = {
     val t: Tree[Int] = Branch(Leaf(1), Leaf(2))
     Functor[Tree].map(t)(_ * 2)
