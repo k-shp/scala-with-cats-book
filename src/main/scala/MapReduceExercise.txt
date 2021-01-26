@@ -1,0 +1,54 @@
+mport cats.Monoid
+import cats.instances.int._
+import cats.instances.future._
+import cats.instances.vector._
+import cats.syntax.semigroup._
+import cats.syntax.foldable._
+import cats.syntax.traverse._
+import scala.concurrent.{Future, Await}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+
+object MapReduceExercise {
+  
+  def foldMap[A, B: Monoid](input: Vector[A])(f: A => B): B = {
+    input.foldLeft(Monoid[B].empty){(acc, i) => {
+      //// same as below
+      //Monoid[B].combine(acc, f(i)) 
+      acc |+| f(i)
+    }}
+  }
+  
+  def parFoldMap[A, B: Monoid](input: Vector[A])(f: A => B): Future[B] = {
+    val numCores = Runtime.getRuntime.availableProcessors
+    val groupSize = (1.0 * input.size / numCores).ceil.toInt
+    val futures: Iterator[Future[B]] = input.grouped(groupSize).map( b =>
+Future{foldMap(b)(f)} )
+    Future.sequence(futures) map {iterable => 
+      iterable.foldLeft(Monoid[B].empty)(_ |+| _)
+    }
+  }
+  
+  def parFoldMapWithCats[A, B: Monoid](input: Vector[A])(f: A => B): Future[B]
+= {
+    val numCores = Runtime.getRuntime.availableProcessors
+    val groupSize = (1.0 * input.size / numCores).ceil.toInt
+    input
+      .grouped(groupSize)
+      .toVector
+      .traverse(group => Future( group.toVector.foldMap(f) ))
+      .map(_.combineAll)
+  }
+  
+  def main(args: Array[String]): Unit = {
+    val testInput = Vector(1,2,3, 4,5,6,7,8,9)
+    val testOutput = foldMap(testInput)(identity)
+    val parTestOutput = Await.result(parFoldMap(testInput)(identity),
+1.second)
+    val catsParTestOutput =
+Await.result(parFoldMapWithCats(testInput)(identity), 1.second)
+    println(s"single: $testOutput, par: $parTestOutput, cats:
+$catsParTestOutput")
+
+  }
+}

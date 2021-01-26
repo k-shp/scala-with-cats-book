@@ -1,0 +1,95 @@
+mport cats.kernel.CommutativeMonoid
+import cats.instances.list._
+import cats.instances.map._
+import cats.instances.int._
+import cats.syntax.semigroup._
+import cats.syntax.foldable._
+
+trait BoundedSemiLattice[A] extends CommutativeMonoid[A] {
+  def combine(a1: A, a2: A): A
+  def empty: A 
+}
+
+object BoundedSemiLatticeInstances {
+  implicit val intInstance: BoundedSemiLattice[Int] = new
+BoundedSemiLattice[Int] {
+    def combine(a1: Int, a2: Int): Int = a1 max a2
+    def empty: Int = 0
+  } 
+  
+  implicit def setInstance[A]: BoundedSemiLattice[Set[A]] = new
+BoundedSemiLattice[Set[A]] {
+    def combine(a1: Set[A], a2: Set[A]): Set[A] = a1 union a2
+    def empty: Set[A] = Set.empty[A]
+  }
+}
+
+trait GCounter[F[_, _], K, V] {
+  def increment(f: F[K, V])(k: K, v: V)(implicit m: CommutativeMonoid[V]):
+F[K, V]
+  def total(f: F[K, V])(implicit m: CommutativeMonoid[V]): V
+  def merge(f1: F[K, V], f2: F[K, V])(implicit m: BoundedSemiLattice[V]): F[K,
+V]
+}
+
+object GCounterInstances {
+  implicit def mapInstance[K, V]: GCounter[Map, K, V] = new GCounter[Map, K,
+V] {
+    def total(map: Map[K, V])(implicit m: CommutativeMonoid[V]): V = {
+      map.values.toList.combineAll
+    }
+    def increment(map: Map[K, V])(k: K, v: V)(implicit m:
+CommutativeMonoid[V]): Map[K, V] = {
+      val total = v |+| map.getOrElse(k, m.empty)
+      map + (k -> total)
+    }
+    def merge(map1: Map[K, V], map2: Map[K, V])(implicit m:
+BoundedSemiLattice[V]): Map[K, V] = map1 |+| map2   
+  }
+}
+
+object GCounter {
+  def apply[F[_, _], K, V](implicit counter: GCounter[F, K, V]) = counter
+
+}
+
+
+// final case class GCounter[A](counters: Map[String, A]) {
+  
+//   def increment(machine: String, value: A)(implicit m:
+CommutativeMonoid[A]): GCounter[A] = {
+//     val previous = counters.getOrElse(machine, m.empty)
+//     val next = value |+| previous 
+//     GCounter(counters + (machine -> next) )
+//   }
+  
+//   def merge(that: GCounter[A])(implicit b: BoundedSemiLattice[A]):
+GCounter[A] = {
+//     GCounter(this.counters |+| that.counters)
+//   }
+  
+//   def total(implicit m: CommutativeMonoid[A]): A =
+counters.values.toList.combineAll
+  
+// }
+
+object GCounterExercise {
+  import GCounterInstances._
+
+  def main(args: Array[String]): Unit = {
+    val m1 = Map("A" -> 1, "B" -> 7, "C" -> 5) 
+    val m2 = Map("A" -> 0, "B" -> 3, "C" -> 1, "D" -> 2) 
+    val counter = GCounter[Map, String, Int]
+    println(counter.total(m1))
+    println(counter.merge(m1, m2)(BoundedSemiLatticeInstances.intInstance)) 
+    println(counter.increment(m1)("D", 7) )
+    
+    val s1 = Map("A" -> Set(1, 2), "B" -> Set(3, 4))
+    val s2 = Map("A" -> Set(5,6), "C" -> Set(7, 8))
+    val counterSet =  GCounter[Map, String, Set[Int]]
+    println(s1.total)
+    println(s1.merge(s2))
+    println(s1.increment("A", Set(9) ))
+    
+  }
+}

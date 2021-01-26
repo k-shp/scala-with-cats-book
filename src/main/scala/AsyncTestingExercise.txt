@@ -1,0 +1,47 @@
+mport scala.concurrent.Future
+import cats.instances.future._
+import cats.instances.list._
+import cats.syntax.traverse._
+import cats.syntax.applicative._
+import cats.syntax.functor._
+import scala.concurrent.ExecutionContext.Implicits.global
+import cats.{Id, Applicative}
+
+trait UptimeClient[F[_]] {
+  def getUptime(hostName: String): F[Int]
+}
+
+class RealUptimeClient extends UptimeClient[Future] {
+  def getUptime(hostName: String): Future[Int] = Future.successful(3)
+}
+
+class TestUptimeClient(hosts: Map[String, Int]) extends UptimeClient[Id] {
+  def getUptime(hostName: String): Int = {
+    hosts.getOrElse(hostName, 0)
+  }
+}
+ 
+class UptimeService[F[_]: Applicative](client: UptimeClient[F]) {
+  def getTotalUptime(hostNames: List[String]): F[Int] = {
+    hostNames.traverse(client.getUptime).map(_.sum)  
+  }
+}
+
+
+object AsyncCodeTestingExercise {
+  def testTotalUptime(): Unit = {
+    val hosts = Map("host1" -> 7, "host2" -> 4)
+    val client = new TestUptimeClient(hosts)
+    val service = new UptimeService(client)
+    val actual = service.getTotalUptime(hosts.keys.toList)
+    val expected = hosts.values.sum
+    println(s"results: $actual vs $expected")
+    assert(actual == expected)
+  }
+  
+  def main(args: Array[String]): Unit = {
+    testTotalUptime()
+    println("lol")
+
+  }
+}
